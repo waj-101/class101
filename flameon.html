@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQA GCSE Chemistry: Virtual Reactivity Lab</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --card-color: #16213e;
+            --accent-color: #0f3460;
+            --text-color: #e2e8f0;
+            --danger-color: #e94560;
+            --success-color: #4e9f3d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--card-color);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #00adb5;
+        }
+
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        select, button {
+            padding: 12px;
+            border-radius: 6px;
+            border: none;
+            background: var(--accent-color);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, button:hover {
+            background: #00adb5;
+            outline: none;
+        }
+
+        button.action-btn {
+            background: var(--danger-color);
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        button.action-btn:hover {
+            background: #ff6b81;
+        }
+
+        .lab-floor {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 40px 0;
+            min-height: 250px;
+            position: relative;
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 20px;
+            border-bottom: 8px solid #334155;
+        }
+
+        .apparatus {
+            width: 80px;
+            height: 200px;
+            border: 4px solid #94a3b8;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            position: relative;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: rgba(56, 189, 248, 0.4);
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            transition: all 0.5s ease;
+        }
+
+        .acid-liquid {
+            background: rgba(234, 179, 8, 0.4);
+        }
+
+        .burner {
+            width: 40px;
+            height: 120px;
+            background: #64748b;
+            position: absolute;
+            bottom: 0;
+            border-radius: 4px;
+        }
+
+        .flame {
+            width: 30px;
+            height: 60px;
+            background: orange;
+            border-radius: 50% 50% 20% 20%;
+            position: absolute;
+            top: -55px;
+            left: 5px;
+            animation: flicker 0.1s infinite alternate;
+            display: none;
+        }
+
+        @keyframes flicker {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05) skewX(2deg); }
+        }
+
+        #output-log {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #00adb5;
+            min-height: 60px;
+            font-family: monospace;
+        }
+
+        /* Screen overlays for hazards */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .blind-spot {
+            background: radial-gradient(circle, rgba(0,0,0,0.95) 10%, rgba(0,0,0,0) 60%);
+        }
+
+        .smoke-screen {
+            background: rgba(226, 232, 240, 0.85);
+            animation: cloudUp 2s forwards;
+        }
+
+        @keyframes cloudUp {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    // --- GATEKEEPER PASSWORD LOCK ---
+    // Change "AQA2026" to whatever password you want to give your students.
+    const accessCode = "AQA2026";
+    let authenticated = false;
+
+    while (!authenticated) {
+        let entry = prompt("Enter the Lab Access Password:");
+        if (entry === null) {
+            document.body.innerHTML = "<h1 style='margin-top:100px; color:#e94560;'>Access Denied. Refresh to try again.</h1>";
+            window.stop();
+            break;
+        } else if (entry === accessCode) {
+            authenticated = true;
+        } else {
+            alert("Incorrect password. Please try again.");
+        }
+    }
+</script>
+
+<div class="container">
+    <h1>AQA GCSE Reactivity Suite</h1>
+    <h2>Teacher-Monitored Live Interactive Lab</h2>
+   
+    <div class="setup-grid">
+        <div class="control-group">
+            <label for="metal-select">Select Metal:</label>
+            <select id="metal-select">
+                <option value="potassium">Potassium (K)</option>
+                <option value="lithium">Lithium (Li)</option>
+                <option value="calcium">Calcium (Ca)</option>
+                <option value="magnesium">Magnesium (Mg)</option>
+                <option value="copper">Copper (Cu)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="qty-select">Select Mass / Quantity:</label>
+            <select id="qty-select">
+                <option value="ribbon">Tiny Ribbon / Grain (0.04g)</option>
+                <option value="chunk">Medium Chunk (2.0g)</option>
+                <option value="massive">Massive Bulk Supply (50.0g)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="condition-select">Select Condition:</label>
+            <select id="condition-select" onchange="updateApparatus(this.value)">
+                <option value="water">Cold Water</option>
+                <option value="acid">Dilute Hydrochloric Acid (HCl)</option>
+                <option value="air">Bunsen Burner Flame (Air)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="lab-floor">
+        <div id="tube-view" class="apparatus">
+            <div id="liquid-element" class="liquid"></div>
+        </div>
+        <div id="burner-view" class="burner" style="display:none;">
+            <div id="flame-element" class="flame"></div>
+        </div>
+    </div>
+
+    <button class="action-btn" onclick="runExperiment()">⚠️ INITIATE REACTION</button>
+
+    <h3>Laboratory Feedback & Observation Log</h3>
+    <div id="output-log">Select your options and initiate the test parameter. Watch your screen for physical system changes.</div>
+</div>
+
+<!-- Visual Effect Overlays -->
+<div id="blind-overlay" class="overlay blind-spot"></div>
+<div id="smoke-overlay" class="overlay smoke-screen"></div>
+
+<script>
+    // Basic audio synthesis for platform independence (No missing file errors)
+    function playSynthSound(type) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'pop') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } else if (type === 'explosion') {
+                // Generate white noise approximation for high energy detonations
+                const bufferSize = ctx.sampleRate * 0.5;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(400, ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(10, ctx.currentTime + 0.5);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.gain.setValueAtTime(0.8, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                noise.start();
+                noise.stop(ctx.currentTime + 0.5);
+            }
+        } catch(e) { console.log("Audio contexts blocked or unsupported."); }
+    }
+
+    function updateApparatus(condition) {
+        const tube = document.getElementById('tube-view');
+        const liquid = document.getElementById('liquid-element');
+        const burner = document.getElementById('burner-view');
